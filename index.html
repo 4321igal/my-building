@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ועד הבית</title>
+<style>
+  :root {
+    --bg: #f5f6f8; --card: #fff; --text: #1f2933; --muted: #6b7280;
+    --border: #e5e7eb; --primary: #2563eb; --ok: #16a34a; --ok-bg: #dcfce7;
+    --bad: #dc2626; --bad-bg: #fee2e2; --future: #f3f4f6;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: system-ui, "Segoe UI", Arial, sans-serif; background: var(--bg); color: var(--text); }
+  header { background: var(--primary); color: #fff; padding: 20px 16px; }
+  header h1 { margin: 0; font-size: 1.5rem; }
+  header p { margin: 4px 0 0; opacity: .85; }
+  nav { display: flex; gap: 8px; flex-wrap: wrap; padding: 12px 16px; background: #fff; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 5; }
+  nav a { color: var(--primary); text-decoration: none; padding: 6px 12px; border-radius: 999px; background: #eff6ff; font-size: .9rem; }
+  main { max-width: 1200px; margin: 0 auto; padding: 16px; }
+  section { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+  h2 { margin: 0 0 12px; font-size: 1.2rem; }
+  .muted { color: var(--muted); font-size: .9rem; }
+  .table-wrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: .9rem; }
+  th, td { border: 1px solid var(--border); padding: 6px 8px; text-align: center; white-space: nowrap; }
+  th { background: #f9fafb; }
+  td.name { text-align: right; }
+  td.paid { background: var(--ok-bg); color: var(--ok); font-weight: bold; }
+  td.unpaid { background: var(--bad-bg); color: var(--bad); }
+  td.future { background: var(--future); color: #c0c4cc; }
+  tfoot td { font-weight: bold; background: #f9fafb; }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 16px; }
+  .stat { border: 1px solid var(--border); border-radius: 10px; padding: 12px; }
+  .stat .label { color: var(--muted); font-size: .85rem; }
+  .stat .value { font-size: 1.4rem; font-weight: bold; margin-top: 4px; }
+  .pos { color: var(--ok); } .neg { color: var(--bad); }
+  .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+  td.amount, th.amount { text-align: left; }
+  .pay-buttons { display: flex; gap: 12px; flex-wrap: wrap; }
+  .btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 20px; border-radius: 10px; border: 0; font-size: 1rem; font-weight: bold; cursor: pointer; text-decoration: none; color: #fff; }
+  .btn.bit { background: #00b6b9; }
+  .btn.paybox { background: #1d4ed8; }
+  .btn.secondary { background: #e5e7eb; color: var(--text); font-weight: normal; padding: 8px 14px; font-size: .9rem; }
+  .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin-top: 12px; }
+  .receipt { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; background: #fafafa; position: relative; }
+  .receipt img { width: 100%; height: 150px; object-fit: cover; display: block; cursor: zoom-in; }
+  .receipt .cap { padding: 6px 8px; font-size: .8rem; }
+  .receipt .del { position: absolute; top: 4px; left: 4px; background: rgba(0,0,0,.6); color: #fff; border: 0; border-radius: 50%; width: 26px; height: 26px; cursor: pointer; }
+  .upload { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .upload input[type=text] { padding: 8px; border: 1px solid var(--border); border-radius: 8px; min-width: 200px; }
+  #lightbox { position: fixed; inset: 0; background: rgba(0,0,0,.85); display: none; align-items: center; justify-content: center; z-index: 10; cursor: zoom-out; }
+  #lightbox img { max-width: 95vw; max-height: 95vh; }
+  #error { display: none; background: var(--bad-bg); color: var(--bad); padding: 12px; border-radius: 8px; margin-bottom: 16px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1 id="title">ועד הבית</h1>
+  <p id="subtitle"></p>
+</header>
+
+<nav>
+  <a href="#payments">מי שילם</a>
+  <a href="#report">הכנסות והוצאות</a>
+  <a href="#receipts">קבלות</a>
+  <a href="#pay">תשלום</a>
+</nav>
+
+<main>
+  <div id="error">
+    לא הצלחתי לטעון את <b>data.json</b> אוטומטית (קורה כשפותחים את הקובץ ישירות מהמחשב).
+    אפשר לבחור את הקובץ ידנית:
+    <input type="file" id="jsonFile" accept=".json,application/json">
+  </div>
+
+  <!-- טבלת תשלומים -->
+  <section id="payments">
+    <h2>טבלת תשלומי ועד בית</h2>
+    <p class="muted" id="feeInfo"></p>
+    <div class="table-wrap"><table id="paymentsTable"></table></div>
+  </section>
+
+  <!-- דוח הכנסות והוצאות -->
+  <section id="report">
+    <h2>דוח הכנסות והוצאות</h2>
+    <div class="stats" id="stats"></div>
+    <div class="grid2">
+      <div>
+        <h3>הוצאות</h3>
+        <div class="table-wrap"><table id="expensesTable"></table></div>
+      </div>
+      <div>
+        <h3>הכנסות לפי חודש</h3>
+        <div class="table-wrap"><table id="monthlyTable"></table></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- קבלות -->
+  <section id="receipts">
+    <h2>קבלות</h2>
+    <div class="upload">
+      <input type="text" id="receiptTitle" placeholder="תיאור הקבלה (לא חובה)">
+      <input type="file" id="receiptFile" accept="image/*" multiple>
+    </div>
+    <p class="muted">תמונות שמעלים כאן נשמרות בדפדפן הזה בלבד. כדי שכל הדיירים יראו קבלה – שימו את התמונה בתיקייה <b>receipts</b> והוסיפו אותה לרשימת <b>receipts</b> בקובץ data.json.</p>
+    <div class="gallery" id="gallery"></div>
+  </section>
+
+  <!-- תשלום -->
+  <section id="pay">
+    <h2>תשלום ועד בית</h2>
+    <p id="payInfo"></p>
+    <div class="pay-buttons" id="payButtons"></div>
+  </section>
+</main>
+
+<div id="lightbox"><img alt=""></div>
+
+<script>
+const MONTHS = ["ינו׳", "פבר׳", "מרץ", "אפר׳", "מאי", "יוני", "יולי", "אוג׳", "ספט׳", "אוק׳", "נוב׳", "דצמ׳"];
+const STORAGE_KEY = "building-receipts";
+const $ = id => document.getElementById(id);
+const money = n => "₪" + Number(n || 0).toLocaleString("he-IL");
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+let data = null;
+
+// ---------- טעינת נתונים ----------
+fetch("data.json", { cache: "no-store" })
+  .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+  .then(render)
+  .catch(() => { $("error").style.display = "block"; });
+
+$("jsonFile").addEventListener("change", e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  file.text().then(t => { render(JSON.parse(t)); $("error").style.display = "none"; })
+    .catch(() => alert("קובץ JSON לא תקין"));
+});
+
+// כמה חודשים "עברו" בשנה המוצגת (כדי לא לסמן חודשים עתידיים כחוב)
+function monthsElapsed(year) {
+  const now = new Date();
+  if (year < now.getFullYear()) return 12;
+  if (year > now.getFullYear()) return 0;
+  return now.getMonth() + 1;
+}
+
+function render(d) {
+  data = d;
+  $("title").textContent = d.buildingName || "ועד הבית";
+  $("subtitle").textContent = "שנת " + d.year;
+  document.title = d.buildingName || "ועד הבית";
+  renderPayments(d);
+  renderReport(d);
+  renderReceipts();
+  renderPay(d);
+}
+
+// ---------- טבלת תשלומים ----------
+function renderPayments(d) {
+  const elapsed = monthsElapsed(d.year);
+  const fee = d.monthlyFee || 0;
+  $("feeInfo").textContent = `דמי ועד: ${money(fee)} לחודש לדירה · ${d.apartments.length} דירות`;
+
+  let html = "<thead><tr><th>דירה</th><th>שם</th>";
+  MONTHS.forEach(m => html += `<th>${m}</th>`);
+  html += "<th>שולם</th><th>חוב</th></tr></thead><tbody>";
+
+  const monthTotals = new Array(12).fill(0);
+  let totalPaid = 0, totalDebt = 0;
+
+  d.apartments.forEach(a => {
+    const paid = new Set(a.paidMonths || []);
+    html += `<tr><td>${esc(a.number)}</td><td class="name">${esc(a.name)}</td>`;
+    let unpaid = 0;
+    for (let m = 1; m <= 12; m++) {
+      if (paid.has(m)) { html += `<td class="paid">✓</td>`; monthTotals[m - 1]++; }
+      else if (m <= elapsed) { html += `<td class="unpaid">✗</td>`; unpaid++; }
+      else html += `<td class="future">–</td>`;
+    }
+    const paidSum = paid.size * fee, debt = unpaid * fee;
+    totalPaid += paidSum; totalDebt += debt;
+    html += `<td>${money(paidSum)}</td><td class="${debt ? "neg" : ""}">${money(debt)}</td></tr>`;
+  });
+
+  html += `</tbody><tfoot><tr><td colspan="2">סה״כ דירות ששילמו</td>`;
+  monthTotals.forEach(c => html += `<td>${c}/${d.apartments.length}</td>`);
+  html += `<td>${money(totalPaid)}</td><td class="neg">${money(totalDebt)}</td></tr></tfoot>`;
+  $("paymentsTable").innerHTML = html;
+}
+
+// ---------- דוח הכנסות והוצאות ----------
+function renderReport(d) {
+  const fee = d.monthlyFee || 0;
+  const monthIncome = new Array(12).fill(0);
+  d.apartments.forEach(a => (a.paidMonths || []).forEach(m => monthIncome[m - 1] += fee));
+  const dues = monthIncome.reduce((s, x) => s + x, 0);
+  const other = (d.otherIncome || []).reduce((s, x) => s + Number(x.amount), 0);
+  const expenses = (d.expenses || []).reduce((s, x) => s + Number(x.amount), 0);
+  const balance = dues + other - expenses;
+
+  $("stats").innerHTML = [
+    ["הכנסות מדמי ועד", money(dues), "pos"],
+    ["הכנסות אחרות", money(other), "pos"],
+    ["סה״כ הוצאות", money(expenses), "neg"],
+    ["יתרה בקופה", money(balance), balance >= 0 ? "pos" : "neg"],
+  ].map(([l, v, c]) => `<div class="stat"><div class="label">${l}</div><div class="value ${c}">${v}</div></div>`).join("");
+
+  let ex = `<thead><tr><th>תאריך</th><th>תיאור</th><th>קטגוריה</th><th class="amount">סכום</th></tr></thead><tbody>`;
+  (d.expenses || []).slice().sort((a, b) => a.date.localeCompare(b.date)).forEach(e => {
+    ex += `<tr><td>${esc(e.date)}</td><td class="name">${esc(e.description)}</td><td>${esc(e.category)}</td><td class="amount">${money(e.amount)}</td></tr>`;
+  });
+  ex += `</tbody><tfoot><tr><td colspan="3">סה״כ</td><td class="amount">${money(expenses)}</td></tr></tfoot>`;
+  $("expensesTable").innerHTML = ex;
+
+  // הכנסות מול הוצאות לפי חודש
+  const monthExp = new Array(12).fill(0), monthOther = new Array(12).fill(0);
+  (d.expenses || []).forEach(e => monthExp[Number(e.date.slice(5, 7)) - 1] += Number(e.amount));
+  (d.otherIncome || []).forEach(e => monthOther[Number(e.date.slice(5, 7)) - 1] += Number(e.amount));
+  let mt = `<thead><tr><th>חודש</th><th class="amount">הכנסות</th><th class="amount">הוצאות</th><th class="amount">הפרש</th></tr></thead><tbody>`;
+  MONTHS.forEach((m, i) => {
+    const inc = monthIncome[i] + monthOther[i], diff = inc - monthExp[i];
+    mt += `<tr><td>${m}</td><td class="amount">${money(inc)}</td><td class="amount">${money(monthExp[i])}</td><td class="amount ${diff < 0 ? "neg" : "pos"}">${money(diff)}</td></tr>`;
+  });
+  mt += `</tbody><tfoot><tr><td>סה״כ</td><td class="amount">${money(dues + other)}</td><td class="amount">${money(expenses)}</td><td class="amount">${money(balance)}</td></tr></tfoot>`;
+  $("monthlyTable").innerHTML = mt;
+}
+
+// ---------- קבלות ----------
+function loadLocalReceipts() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch { return []; }
+}
+function saveLocalReceipts(list) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(list)); return true; }
+  catch { alert("אין מספיק מקום לשמור את התמונה בדפדפן"); return false; }
+}
+
+function renderReceipts() {
+  const fromJson = (data?.receipts || []).map(r => ({ ...r, src: r.file, local: false }));
+  const local = loadLocalReceipts().map((r, i) => ({ ...r, local: true, idx: i }));
+  const all = [...fromJson, ...local];
+  $("gallery").innerHTML = all.length ? all.map(r => `
+    <div class="receipt">
+      <img src="${esc(r.src)}" alt="${esc(r.title)}">
+      ${r.local ? `<button class="del" data-idx="${r.idx}" title="מחק">✕</button>` : ""}
+      <div class="cap">${esc(r.title || "קבלה")}<br><span class="muted">${esc(r.date || "")}</span></div>
+    </div>`).join("") : `<p class="muted">עדיין אין קבלות.</p>`;
+}
+
+// מקטין את התמונה כדי שתיכנס לאחסון הדפדפן
+function shrinkImage(file, maxSize = 1200) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, maxSize / Math.max(img.width, img.height));
+      const c = document.createElement("canvas");
+      c.width = img.width * scale; c.height = img.height * scale;
+      c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(img.src);
+      resolve(c.toDataURL("image/jpeg", 0.75));
+    };
+    img.onerror = reject;
+    img.src = URL.createObjectURL(file);
+  });
+}
+
+$("receiptFile").addEventListener("change", async e => {
+  const list = loadLocalReceipts();
+  const title = $("receiptTitle").value.trim();
+  for (const file of e.target.files) {
+    try {
+      list.push({ title: title || file.name, date: new Date().toISOString().slice(0, 10), src: await shrinkImage(file) });
+    } catch { alert("לא הצלחתי לקרוא את " + file.name); }
+  }
+  if (saveLocalReceipts(list)) renderReceipts();
+  e.target.value = ""; $("receiptTitle").value = "";
+});
+
+$("gallery").addEventListener("click", e => {
+  if (e.target.classList.contains("del")) {
+    if (!confirm("למחוק את הקבלה?")) return;
+    const list = loadLocalReceipts();
+    list.splice(Number(e.target.dataset.idx), 1);
+    saveLocalReceipts(list); renderReceipts();
+  } else if (e.target.tagName === "IMG") {
+    $("lightbox").querySelector("img").src = e.target.src;
+    $("lightbox").style.display = "flex";
+  }
+});
+$("lightbox").addEventListener("click", () => $("lightbox").style.display = "none");
+
+// ---------- תשלום בביט / פייבוקס ----------
+function renderPay(d) {
+  const p = d.payment || {};
+  $("payInfo").innerHTML = `סכום חודשי: <b>${money(d.monthlyFee)}</b>` +
+    (p.payeeName ? ` · לתשלום ל: <b>${esc(p.payeeName)}</b>` : "") +
+    `<br><span class="muted">נא לציין בהערה את מספר הדירה והחודש.</span>`;
+
+  let html = "";
+  if (p.bitLink) html += `<a class="btn bit" href="${esc(p.bitLink)}" target="_blank" rel="noopener">תשלום בביט</a>`;
+  if (p.bitPhone) html += `<button class="btn bit" id="copyBit">ביט: ${esc(p.bitPhone)} (העתק מספר)</button>`;
+  if (p.payboxLink) html += `<a class="btn paybox" href="${esc(p.payboxLink)}" target="_blank" rel="noopener">תשלום בפייבוקס</a>`;
+  $("payButtons").innerHTML = html || `<p class="muted">לא הוגדרו פרטי תשלום ב-data.json</p>`;
+
+  const copyBtn = $("copyBit");
+  if (copyBtn) copyBtn.onclick = () => {
+    navigator.clipboard?.writeText(p.bitPhone.replace(/\D/g, ""))
+      .then(() => { copyBtn.textContent = "המספר הועתק ✓ – פתחו את ביט והדביקו"; })
+      .catch(() => alert("מספר לביט: " + p.bitPhone));
+  };
+}
+</script>
+</body>
+</html>

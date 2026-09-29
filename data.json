@@ -1,0 +1,47 @@
+{
+  "buildingName": "ועד הבית - הבניין שלנו",
+  "year": 2026,
+  "monthlyFee": 150,
+  "payment": {
+    "bitPhone": "050-0000000",
+    "bitLink": "",
+    "payboxLink": "https://payboxapp.page.link/XXXXXXXX",
+    "payeeName": "גזבר ועד הבית"
+  },
+  "apartments": [
+    { "number": 1,  "name": "משפחת כהן",    "paidMonths": [1, 2, 3, 4, 5, 6, 7, 8, 9] },
+    { "number": 2,  "name": "משפחת לוי",    "paidMonths": [1, 2, 3, 4, 5, 6] },
+    { "number": 3,  "name": "משפחת מזרחי",  "paidMonths": [1, 2, 3, 4, 5, 6, 7, 8, 9] },
+    { "number": 4,  "name": "משפחת פרץ",    "paidMonths": [1, 2, 3] },
+    { "number": 5,  "name": "משפחת ביטון",  "paidMonths": [1, 2, 3, 4, 5, 6, 7, 8] },
+    { "number": 6,  "name": "משפחת אברהם",  "paidMonths": [1, 2, 3, 4, 5, 6, 7, 8, 9] },
+    { "number": 7,  "name": "משפחת פרידמן", "paidMonths": [] },
+    { "number": 8,  "name": "משפחת דהן",    "paidMonths": [1, 2, 3, 4, 5, 6, 7, 8, 9] },
+    { "number": 9,  "name": "משפחת אגבריה", "paidMonths": [1, 2, 3, 4, 5] },
+    { "number": 10, "name": "משפחת שפירא",  "paidMonths": [1, 2, 3, 4, 5, 6, 7, 8, 9] },
+    { "number": 11, "name": "משפחת גולן",   "paidMonths": [1, 2, 3, 4, 5, 6, 7] },
+    { "number": 12, "name": "משפחת חדד",    "paidMonths": [1, 2, 3, 4, 5, 6, 7, 8, 9] },
+    { "number": 13, "name": "משפחת רוזן",   "paidMonths": [1, 2] },
+    { "number": 14, "name": "משפחת אוחיון", "paidMonths": [1, 2, 3, 4, 5, 6, 7, 8, 9] },
+    { "number": 15, "name": "משפחת סויסה",  "paidMonths": [1, 2, 3, 4, 5, 6] },
+    { "number": 16, "name": "משפחת קליין",  "paidMonths": [1, 2, 3, 4, 5, 6, 7, 8, 9] },
+    { "number": 17, "name": "משפחת נחום",   "paidMonths": [1, 2, 3, 4, 5, 6, 7, 8] },
+    { "number": 18, "name": "משפחת בן דוד", "paidMonths": [1, 2, 3, 4] },
+    { "number": 19, "name": "משפחת טל",     "paidMonths": [1, 2, 3, 4, 5, 6, 7, 8, 9] }
+  ],
+  "otherIncome": [
+    { "date": "2026-03-15", "description": "החזר מחברת הביטוח", "amount": 400 }
+  ],
+  "expenses": [
+    { "date": "2026-01-10", "description": "ניקיון חדר מדרגות - ינואר", "category": "ניקיון", "amount": 600 },
+    { "date": "2026-02-10", "description": "ניקיון חדר מדרגות - פברואר", "category": "ניקיון", "amount": 600 },
+    { "date": "2026-02-20", "description": "חשבון חשמל משותף", "category": "חשמל", "amount": 380 },
+    { "date": "2026-03-05", "description": "תיקון מעלית", "category": "מעלית", "amount": 1450 },
+    { "date": "2026-03-10", "description": "ניקיון חדר מדרגות - מרץ", "category": "ניקיון", "amount": 600 },
+    { "date": "2026-04-18", "description": "חשבון חשמל משותף", "category": "חשמל", "amount": 410 },
+    { "date": "2026-05-02", "description": "גינון", "category": "גינון", "amount": 350 },
+    { "date": "2026-06-12", "description": "ביטוח מבנה", "category": "ביטוח", "amount": 2100 },
+    { "date": "2026-07-22", "description": "החלפת נורות בלובי", "category": "תחזוקה", "amount": 180 }
+  ],
+  "receipts": []
+}
